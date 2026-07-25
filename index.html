@@ -775,8 +775,8 @@
 
 <div id="edit-toolbar">
   <span>Tryb edycji: kliknij dowolny tekst i zmień treść.</span>
-  <button id="save-edit-btn" type="button" class="btn btn-primary">Zapisz i pobierz stronę</button>
-  <button id="exit-edit-btn" type="button" class="btn btn-ghost">Zakończ edycję</button>
+  <button id="save-edit-btn" type="button" class="btn btn-primary">Zapisz na serwer</button>
+  <span id="cms-save-status" style="font-size:13px;margin-left:12px;font-family:'IBM Plex Mono',monospace;"></span><button id="exit-edit-btn" type="button" class="btn btn-ghost">Zakończ edycję</button>
 </div>
 
 <div id="site-content">
@@ -1624,105 +1624,89 @@
       return /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(ua);
     }
 
-    saveBtn.addEventListener('click', function(){
-      const originalLabel = saveBtn.textContent;
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Przygotowywanie pliku…';
+    
+    // ============================================================
+    // ZAPIS PRZEZ GITHUB API -> GitHub Actions -> FTP -> serwer
+    // ============================================================
+    var GITHUB_TOKEN = 'GITHUB_TOKEN_PLACEHOLDER';
+    var GITHUB_REPO  = 'krzykin94/portfolio-site';
 
-      // Open the tab synchronously, still inside the click gesture — Safari blocks/blanks
-      // window.open() calls made later inside a setTimeout, even a very short one.
-      const safariMode = isSafariBrowser() && !(window.navigator && window.navigator.msSaveOrOpenBlob);
-      const preOpenedWin = safariMode ? window.open('', '_blank') : null;
-
-      setTimeout(function(){
-        try {
-          // Pobierz aktualne zmiany z żywego DOM przed klonowaniem
-          const liveContent = document.getElementById('site-content');
-          const clone = document.documentElement.cloneNode(true);
-          const cloneBody = clone.querySelector('body');
-          cloneBody.classList.remove('edit-mode', 'unlocked', 'admin', 'menu-open');
-          // Wstaw aktualną treść ze zmianami do klona
-          const cloneSiteContent = clone.querySelector('#site-content');
-          if (cloneSiteContent && liveContent) {
-            var rawInner = liveContent.innerHTML;
-            // Usuń atrybuty dodane przez przeglądarkę (data-manus_*)
-            rawInner = rawInner.replace(/ data-manus_clickable="true"/g, '');
-            rawInner = rawInner.replace(/ data-manus_click_id="\d+"/g, '');
-            cloneSiteContent.innerHTML = rawInner;
-          }
-          clone.querySelectorAll('[contenteditable]').forEach(function(el){
-            el.removeAttribute('contenteditable');
-          });
-          const toolbar = clone.querySelector('#edit-toolbar');
-          if (toolbar) toolbar.remove();
-          const toggle = clone.querySelector('.edit-toggle');
-          if (toggle) toggle.remove();
-          // Usuń toolbar/toggle z site-content jeśli tam są
-          var toolbarInSC = clone.querySelector('#site-content #edit-toolbar');
-          if (toolbarInSC) toolbarInSC.remove();
-          var toggleInSC = clone.querySelector('#site-content .edit-toggle');
-          if (toggleInSC) toggleInSC.remove();
-          const lockInputClone = clone.querySelector('#lock-input');
-          if (lockInputClone) lockInputClone.removeAttribute('value');
-
-          const html = '<!DOCTYPE html>\n' + clone.outerHTML;
-          const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-
-          if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-            window.navigator.msSaveOrOpenBlob(blob, 'manager-gastronomii-portfolio.html');
-          } else if (safariMode) {
-            // Safari: otwórz nową kartę z pełną treścią i pokaż instrukcję
-            if (!preOpenedWin || preOpenedWin.closed) {
-              alert('Safari zablokował otwarcie nowej karty.\nZezwól na wyskakujące okienka dla tej strony:\nSafari → Ustawienia → Strony internetowe → Wyskakujące okienka → Zezwól\nPotem spróbuj ponownie.');
-            } else {
-              // Usuń znaczniki data-manus z innerHTML przed zapisem
-              var cleanHtml = html.replace(/ data-manus_clickable="true"/g, '').replace(/ data-manus_click_id="\d+"/g, '');
-              preOpenedWin.document.open('text/html', 'replace');
-              preOpenedWin.document.write(cleanHtml);
-              preOpenedWin.document.close();
-              // Pokaż instrukcję po krótkim opóźnieniu (żeby strona się załadowała)
-              setTimeout(function() {
-                preOpenedWin.focus();
-                alert('✅ Twoje zmiany są w nowej karcie.\n\n📌 Jak zapisać plik HTML (nie Web Archive):\n\n1. Przełącz się na nową kartę\n2. Naciśnij Cmd + S\n3. W oknie zapisu zmień format z „Web Archive" na „Strona internetowa, tylko HTML"\n4. Zapisz plik — zastąp stary plik nowym\n\n⚠️ Ważne: wybierz „Strona internetowa, tylko HTML" a NIE „Web Archive"');
-              }, 800);
-            }
-          } else {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'manager-gastronomii-portfolio.html';
-            a.style.position = 'fixed';
-            a.style.left = '-9999px';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(function(){
-              a.remove();
-              URL.revokeObjectURL(url);
-            }, 1500);
-          }
-        } catch (err) {
-          alert('Automatyczne pobieranie się nie powiodło. Otworzę teraz stronę z Twoimi zmianami w nowej karcie — użyj Ctrl+S (Cmd+S na Macu), żeby zapisać ją jako plik HTML.');
-          try {
-            const clone2 = document.documentElement.cloneNode(true);
-            const body2 = clone2.querySelector('body');
-            body2.classList.remove('edit-mode', 'unlocked', 'admin', 'menu-open');
-            clone2.querySelectorAll('[contenteditable]').forEach(function(el){ el.removeAttribute('contenteditable'); });
-            const toolbar2 = clone2.querySelector('#edit-toolbar');
-            if (toolbar2) toolbar2.remove();
-            const toggle2 = clone2.querySelector('.edit-toggle');
-            if (toggle2) toggle2.remove();
-            const w = (preOpenedWin && !preOpenedWin.closed) ? preOpenedWin : window.open('', '_blank');
-            w.document.open();
-            w.document.write('<!DOCTYPE html>' + clone2.outerHTML);
-            w.document.close();
-          } catch (err2) {
-            alert('Niestety nie udało się przygotować pliku do zapisu. Spróbuj odświeżyć stronę i ponowić edycję.');
-          }
-        } finally {
-          saveBtn.disabled = false;
-          saveBtn.textContent = originalLabel;
+    function saveToGitHub(filename, htmlContent, statusEl) {
+      statusEl.textContent = 'Łączenie z GitHub...';
+      // Pobierz aktualny SHA pliku (potrzebny do aktualizacji)
+      fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + filename, {
+        headers: {
+          'Authorization': 'token ' + GITHUB_TOKEN,
+          'Accept': 'application/vnd.github.v3+json'
         }
-      }, 30);
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(fileData) {
+        var sha = fileData.sha;
+        statusEl.textContent = 'Wysyłanie zmian...';
+        // Zakoduj HTML do base64
+        var encoded = btoa(unescape(encodeURIComponent(htmlContent)));
+        // Wyślij aktualizację
+        return fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + filename, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'token ' + GITHUB_TOKEN,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'CMS update: ' + filename + ' - ' + new Date().toLocaleString('pl-PL'),
+            content: encoded,
+            sha: sha
+          })
+        });
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (result.content) {
+          statusEl.textContent = '✅ Zapisano! Strona zaktualizuje się za ~30 sekund.';
+          statusEl.style.color = '#2d6a4f';
+          setTimeout(function() {
+            statusEl.textContent = '';
+            statusEl.style.color = '';
+          }, 8000);
+        } else {
+          throw new Error(result.message || 'Błąd zapisu');
+        }
+      })
+      .catch(function(err) {
+        statusEl.textContent = '❌ Błąd: ' + err.message;
+        statusEl.style.color = '#c0392b';
+        console.error('GitHub save error:', err);
+      });
+    }
+
+    saveBtn.addEventListener('click', function() {
+      var statusEl = document.getElementById('cms-save-status');
+      if (!statusEl) statusEl = { textContent: '', style: {} };
+      statusEl.textContent = 'Przygotowywanie...';
+
+      // Pobierz aktualne zmiany z żywego DOM
+      var liveContent = document.getElementById('site-content');
+      var clone = document.documentElement.cloneNode(true);
+      var cloneBody = clone.querySelector('body');
+      cloneBody.classList.remove('edit-mode', 'unlocked', 'admin', 'menu-open');
+      var cloneSC = clone.querySelector('#site-content');
+      if (cloneSC && liveContent) {
+        var rawInner = liveContent.innerHTML;
+        rawInner = rawInner.replace(/ data-manus_clickable="true"/g, '');
+        rawInner = rawInner.replace(/ data-manus_click_id="\d+"/g, '');
+        cloneSC.innerHTML = rawInner;
+      }
+      ['#edit-toolbar', '.edit-toggle', '#site-content #edit-toolbar', '#site-content .edit-toggle',
+       '#cms-save-status', '#site-content #cms-save-status'].forEach(function(sel) {
+        var el = clone.querySelector(sel); if (el) el.remove();
+      });
+      clone.querySelectorAll('[contenteditable]').forEach(function(el) { el.removeAttribute('contenteditable'); });
+      var lockEl = clone.querySelector('#lock-input'); if (lockEl) lockEl.removeAttribute('value');
+      var finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+
+      saveToGitHub('index.html', finalHtml, statusEl);
     });
   })();
 </script>
