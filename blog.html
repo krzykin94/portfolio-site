@@ -1026,61 +1026,43 @@
     }
 
     
-    // ============================================================
-    // ZAPIS PRZEZ GITHUB API -> GitHub Actions -> FTP -> serwer
-    // ============================================================
-    var GITHUB_TOKEN = 'GITHUB_TOKEN_PLACEHOLDER';
-    var GITHUB_REPO  = 'krzykin94/portfolio-site';
 
+    // ============================================================
+    // ZAPIS PRZEZ PHP PROXY -> GitHub API -> GitHub Actions -> FTP
+    // ============================================================
     function saveToGitHub(filename, htmlContent, statusEl) {
-      statusEl.textContent = 'Łączenie z GitHub...';
-      // Pobierz aktualny SHA pliku (potrzebny do aktualizacji)
-      fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + filename, {
-        headers: {
-          'Authorization': 'token ' + GITHUB_TOKEN,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(fileData) {
-        var sha = fileData.sha;
-        statusEl.textContent = 'Wysyłanie zmian...';
-        // Zakoduj HTML do base64
-        var encoded = btoa(unescape(encodeURIComponent(htmlContent)));
-        // Wyślij aktualizację
-        return fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + filename, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'token ' + GITHUB_TOKEN,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: 'CMS update: ' + filename + ' - ' + new Date().toLocaleString('pl-PL'),
-            content: encoded,
-            sha: sha
-          })
-        });
+      statusEl.textContent = 'Wysyłanie zmian na serwer...';
+      
+      // Wyślij do PHP proxy na serwerze
+      fetch('/cms-save.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: filename,
+          content: htmlContent,
+          password: 'admin2026'
+        })
       })
       .then(function(r) { return r.json(); })
       .then(function(result) {
-        if (result.content) {
-          statusEl.textContent = '✅ Zapisano! Strona zaktualizuje się za ~30 sekund.';
+        if (result.success) {
+          statusEl.textContent = '\u2705 Zapisano! Strona zaktualizuje si\u0119 za ~30 sekund.';
           statusEl.style.color = '#2d6a4f';
           setTimeout(function() {
             statusEl.textContent = '';
             statusEl.style.color = '';
           }, 8000);
         } else {
-          throw new Error(result.message || 'Błąd zapisu');
+          throw new Error(result.error || 'Bl\u0105d zapisu');
         }
       })
       .catch(function(err) {
-        statusEl.textContent = '❌ Błąd: ' + err.message;
+        statusEl.textContent = '\u274C Bl\u0105d: ' + err.message;
         statusEl.style.color = '#c0392b';
-        console.error('GitHub save error:', err);
+        console.error('CMS save error:', err);
       });
     }
+
 
     saveBtn.addEventListener('click', function() {
       var statusEl = document.getElementById('cms-save-status');
