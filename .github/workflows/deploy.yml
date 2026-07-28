@@ -7,15 +7,17 @@ on:
     paths:
       - 'index.html'
       - 'blog.html'
+      - 'cms-save.php'
+      - 'manager.html'
 
 jobs:
-  deploy:
+  deploy-main:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy via FTP
+      - name: Deploy main site via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -28,3 +30,27 @@ jobs:
             **/.git*/**
             **/node_modules/**
             .github/**
+            manager.html
+
+  deploy-manager:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy manager subdomain via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /domains/manager.krzysztofkinder.pl/public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .github/**
+            index.html
+            blog.html
+            cms-save.php
