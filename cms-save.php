@@ -12,15 +12,24 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['success'=>false,'error'=>'Tylko POST']); exit; }
 
-// Wczytaj konfigurację z pliku poza public_html
-$config_file = dirname($_SERVER['DOCUMENT_ROOT']) . '/cms-config.php';
-if (!file_exists($config_file)) {
+// Szukaj cms-config.php w kilku możliwych lokalizacjach
+$possible_paths = [
+    '/home/srv119757/cms-config.php',
+    dirname($_SERVER['DOCUMENT_ROOT']) . '/cms-config.php',
+    dirname(dirname($_SERVER['DOCUMENT_ROOT'])) . '/cms-config.php',
+    dirname(dirname(dirname($_SERVER['DOCUMENT_ROOT']))) . '/cms-config.php',
+];
+$config_file = null;
+foreach ($possible_paths as $path) {
+    if (file_exists($path)) { $config_file = $path; break; }
+}
+if (!$config_file) {
     echo json_encode(['success'=>false,'error'=>'Brak pliku konfiguracyjnego cms-config.php']);
     exit;
 }
 require $config_file; // definiuje $GITHUB_TOKEN, $GITHUB_REPO, $CMS_PASSWORD
 
-$ALLOWED_FILES = ['index.html', 'blog.html'];
+$ALLOWED_FILES = ['index.html', 'blog.html', 'manager.html'];
 
 $input    = json_decode(file_get_contents('php://input'), true);
 $filename = $input['filename'] ?? '';
