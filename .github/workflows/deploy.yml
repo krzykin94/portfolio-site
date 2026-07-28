@@ -39,8 +39,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy manager.html as index.html to subdomain via FTP
+      - name: Prepare manager index
         run: |
-          curl -T manager.html \
-            --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-            "ftp://${{ secrets.FTP_SERVER }}/domains/manager.krzysztofkinder.pl/public_html/index.html"
+          mkdir -p manager-deploy
+          cp manager.html manager-deploy/index.html
+          cp cms-save.php manager-deploy/cms-save.php
+
+      - name: Deploy manager subdomain via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./manager-deploy/
+          server-dir: /domains/manager.krzysztofkinder.pl/public_html/
+          dangerous-clean-slate: false
