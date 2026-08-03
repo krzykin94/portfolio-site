@@ -221,7 +221,7 @@
 
         <!-- FINANSE -->
         <div class="cat-section" id="cat-finanse" data-category="finanse">
-          <div class="cat-header"><h2 data-pl="Finanse gastronomii" data-en="Restaurant Finances">Finanse gastronomii</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
+          <div class="cat-header"><h2 class="cat-section-title" data-pl="Finanse gastronomii" data-en="Restaurant Finances">Finanse gastronomii</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
           <div class="article-grid">
             <a href="/blog.html#jak-policzyc-food-cost" class="article-card" data-article="jak-policzyc-food-cost" data-cat="finanse">
               <span class="article-card-cat" data-pl="Finanse gastronomii" data-en="Restaurant Finances">Finanse gastronomii</span>
@@ -252,7 +252,7 @@
 
         <!-- ZARZĄDZANIE -->
         <div class="cat-section" id="cat-zarzadzanie" data-category="zarzadzanie">
-          <div class="cat-header"><h2 data-pl="Zarządzanie zespołem" data-en="Team Management">Zarządzanie zespołem</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
+          <div class="cat-header"><h2 class="cat-section-title" data-pl="Zarządzanie zespołem" data-en="Team Management">Zarządzanie zespołem</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
           <div class="article-grid">
             <a href="/blog.html#jak-przeprowadzic-odprawe" class="article-card" data-article="jak-przeprowadzic-odprawe" data-cat="zarzadzanie">
               <span class="article-card-cat" data-pl="Zarządzanie zespołem" data-en="Team Management">Zarządzanie zespołem</span>
@@ -283,7 +283,7 @@
 
         <!-- OPERACJE -->
         <div class="cat-section" id="cat-operacje" data-category="operacje">
-          <div class="cat-header"><h2 data-pl="Operacje" data-en="Operations">Operacje</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
+          <div class="cat-header"><h2 class="cat-section-title" data-pl="Operacje" data-en="Operations">Operacje</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
           <div class="article-grid">
             <a href="/blog.html#checklista-otwarcia-lokalu" class="article-card" data-article="checklista-otwarcia-lokalu" data-cat="operacje">
               <span class="article-card-cat" data-pl="Operacje" data-en="Operations">Operacje</span>
@@ -314,7 +314,7 @@
 
         <!-- MARKETING -->
         <div class="cat-section" id="cat-marketing" data-category="marketing">
-          <div class="cat-header"><h2 data-pl="Marketing i sprzedaż" data-en="Marketing &amp; Sales">Marketing i sprzedaż</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
+          <div class="cat-header"><h2 class="cat-section-title" data-pl="Marketing i sprzedaż" data-en="Marketing &amp; Sales">Marketing i sprzedaż</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
           <div class="article-grid">
             <a href="/blog.html#jak-zwiekszyc-sredni-rachunek" class="article-card" data-article="jak-zwiekszyc-sredni-rachunek" data-cat="marketing">
               <span class="article-card-cat" data-pl="Marketing i sprzedaż" data-en="Marketing &amp; Sales">Marketing i sprzedaż</span>
@@ -345,7 +345,7 @@
 
         <!-- KARIERA -->
         <div class="cat-section" id="cat-kariera" data-category="kariera">
-          <div class="cat-header"><h2 data-pl="Kariera managera" data-en="Manager Career">Kariera managera</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
+          <div class="cat-header"><h2 class="cat-section-title" data-pl="Kariera managera" data-en="Manager Career">Kariera managera</h2><span class="cat-count" data-pl="4 artykuły" data-en="4 articles">4 artykuły</span></div>
           <div class="article-grid">
             <a href="/blog.html#jak-zostac-managerem-restauracji" class="article-card" data-article="jak-zostac-managerem-restauracji" data-cat="kariera">
               <span class="article-card-cat" data-pl="Kariera managera" data-en="Manager Career">Kariera managera</span>
@@ -383,7 +383,7 @@
           <div class="sidebar-stat"><span data-pl="Artykuły" data-en="Articles">Artykuły</span><strong>20</strong></div>
           <div class="sidebar-stat"><span data-pl="Kategorie" data-en="Categories">Kategorie</span><strong>5</strong></div>
           <div class="sidebar-stat"><span data-pl="Autor" data-en="Author">Autor</span><strong style="font-size:15px;">Krzysztof Kinder</strong></div>
-          <div class="sidebar-stat"><span data-pl="Doświadczenie" data-en="Experience">Doświadczenie</span><strong>10+ lat</strong></div>
+          <div class="sidebar-stat"><span data-pl="Doświadczenie" data-en="Experience">Doświadczenie</span><strong><span data-stat="experience">10+ lat</span></strong></div>
         </div>
         <div class="sidebar-card">
           <h4 data-pl="Kategorie" data-en="Categories">Kategorie</h4>
@@ -1159,9 +1159,45 @@ function setLang(lang) {
     if (!art) return;
     var h3 = card.querySelector('h3');
     var p = card.querySelector('p');
+    var catEl = card.querySelector('.article-cat');
     if (h3) h3.textContent = art.title;
     if (p) p.textContent = art.lead;
+    if (catEl && art.cat) catEl.textContent = art.cat;
+    // Update readTime label
+    var footer = card.querySelector('.article-card-footer');
+    if (footer) {
+      var timeSpan = footer.querySelector('span:first-child');
+      if (timeSpan && art.readTime) {
+        timeSpan.textContent = art.readTime + (lang === 'en' ? ' min read' : ' min czytania');
+      }
+      // Update status label
+      var statusSpan = footer.querySelector('.article-status');
+      if (statusSpan) {
+        if (statusSpan.classList.contains('ready')) {
+          statusSpan.textContent = lang === 'en' ? 'Available' : 'Dostępny';
+        } else {
+          statusSpan.textContent = lang === 'en' ? 'Coming soon' : 'Wkrótce';
+        }
+      }
+    }
   });
+  
+  // Update category section headings
+  document.querySelectorAll('.cat-section-title').forEach(function(el) {
+    var catPl = el.getAttribute('data-pl');
+    var catEn = el.getAttribute('data-en');
+    if (catPl && catEn) el.textContent = lang === 'en' ? catEn : catPl;
+  });
+  
+  // Update "artykuły/articles" count labels
+  document.querySelectorAll('.cat-count').forEach(function(el) {
+    var count = el.getAttribute('data-count') || el.textContent.replace(/[^0-9]/g, '');
+    if (count) el.textContent = count + ' ' + (lang === 'en' ? 'articles' : 'artykuły');
+  });
+  
+  // Update sidebar stats
+  var expStat = document.querySelector('[data-stat="experience"]');
+  if (expStat) expStat.textContent = lang === 'en' ? '10+ years' : '10+ lat';
 
   // Update page title
   document.title = lang === 'en'
