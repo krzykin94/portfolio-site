@@ -1163,14 +1163,18 @@ function setLang(lang) {
     if (h3) h3.textContent = art.title;
     if (p) p.textContent = art.lead;
     if (catEl && art.cat) catEl.textContent = art.cat;
-    // Update readTime label
+    // Update readTime label and status
     var footer = card.querySelector('.article-card-footer');
     if (footer) {
       var timeSpan = footer.querySelector('span:first-child');
-      if (timeSpan && art.readTime) {
-        timeSpan.textContent = art.readTime + (lang === 'en' ? ' min read' : ' min czytania');
+      if (timeSpan) {
+        var t = timeSpan.textContent;
+        if (lang === 'en') {
+          timeSpan.textContent = t.replace(/\s*min czytania/, ' min read');
+        } else {
+          timeSpan.textContent = t.replace(/\s*min read/, ' min czytania');
+        }
       }
-      // Update status label
       var statusSpan = footer.querySelector('.article-status');
       if (statusSpan) {
         if (statusSpan.classList.contains('ready')) {
@@ -1180,6 +1184,21 @@ function setLang(lang) {
         }
       }
     }
+  });
+  
+  // Global fallback: update all readTime spans and status spans
+  document.querySelectorAll('.article-card-footer span:first-child').forEach(function(span) {
+    if (lang === 'en') {
+      span.textContent = span.textContent.replace(/\s*min czytania/, ' min read');
+    } else {
+      span.textContent = span.textContent.replace(/\s*min read/, ' min czytania');
+    }
+  });
+  document.querySelectorAll('.article-status.ready').forEach(function(span) {
+    span.textContent = lang === 'en' ? 'Available' : 'Dostępny';
+  });
+  document.querySelectorAll('.article-status:not(.ready)').forEach(function(span) {
+    span.textContent = lang === 'en' ? 'Coming soon' : 'Wkrótce';
   });
   
   // Update category section headings
@@ -1209,7 +1228,7 @@ function setLang(lang) {
 document.addEventListener('DOMContentLoaded', function() {
   // Override ARTICLES with bilingual version
   window.ARTICLES = currentLang === 'en' ? ARTICLES_EN : ARTICLES_PL;
-  setTimeout(function() { setLang(currentLang); }, 50);
+  setTimeout(function() { setLang(currentLang); }, 200);
 });
 </script>
 
